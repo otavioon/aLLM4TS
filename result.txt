@@ -1,0 +1,3 @@
+pretrain_LLM4TS_pt_sl1024_pl1024_llml6_lr0.0001_bs256_percent100_ln_wpe_attn_mlp_gpt2_w_weight_s16_0  
+mse:0.40581297874450684, mae:0.28266799449920654, rse:0.5622164607048035
+

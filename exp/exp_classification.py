@@ -1,3 +1,4 @@
+import tqdm
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from models import LLM4TS_cls
@@ -137,13 +138,14 @@ class Exp_Classification(Exp_Basic):
         criterion = self._select_criterion()
 
         for epoch in range(self.args.train_epochs):
+            print(f"Epoch: {epoch + 1}...")
             iter_count = 0
             train_loss = []
 
             self.model.train()
             epoch_time = time.time()
 
-            for i, (batch_x, label, padding_mask) in enumerate(train_loader):
+            for i, (batch_x, label, padding_mask) in tqdm.tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Training. Epoch: {epoch + 1}"):
                 iter_count += 1
                 model_optim.zero_grad()
 

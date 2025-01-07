@@ -1,4 +1,5 @@
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
+set -x
 
 if [ ! -d "./logs" ]; then
     mkdir ./logs

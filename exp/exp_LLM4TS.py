@@ -1,3 +1,4 @@
+import tqdm
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from models import LLM4TS_pt, LLM4TS_sft_zero
@@ -178,7 +179,7 @@ class Exp_Main(Exp_Basic):
             self.model.train()
             epoch_time = time.time()
 
-            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(train_loader):
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in tqdm.tqdm(enumerate(train_loader), total=len(train_loader), desc='Epoch: {}'.format(epoch + 1)):
                 iter_count += 1
                 model_optim.zero_grad()
                 batch_x = batch_x.to(self.device, dtype=torch.float)
@@ -212,7 +213,7 @@ class Exp_Main(Exp_Basic):
 
                         batch_x = batch_x[:, -self.args.history_len:, :]
                         outputs = self.model(batch_x, batch_x_)
-                    else:
+                    else:   ##### HERE
                         if self.args.mask_pt > 0:
                         
                             B, T, N = batch_x.shape
@@ -235,7 +236,7 @@ class Exp_Main(Exp_Basic):
                         batch_y = batch_y.permute(0, 2, 1)
                         batch_y = batch_y.unfold(dimension=-1, size=self.args.patch_len, step=self.args.stride)
 
-                    else:
+                    else:   ## HERE
                         f_dim = -1 if self.args.features == 'MS' else 0
                         outputs = outputs[:, -self.args.pred_len:, f_dim:]
                         batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
