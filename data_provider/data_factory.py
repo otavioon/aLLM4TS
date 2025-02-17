@@ -12,7 +12,10 @@ from data_provider.data_loader import (
     SMDSegLoader, 
     SWATSegLoader,
     Dataset_M4,
-    UEAloader
+    UEAloader,
+    Pretrain_allm4ts_ES_dataset,
+    Pretrain_allm4ts_DAGHAR_dataset
+    
 )
 from torch.utils.data import DataLoader
 import torch
@@ -28,6 +31,8 @@ data_dict = {
     "electricity": Dataset_Electricity,
     'custom': Dataset_Custom,
     'pretrain': Dataset_pretrain,
+    "pretrain_allm4ts_es": Pretrain_allm4ts_ES_dataset,
+    "pretrain_allm4ts_daghar": Pretrain_allm4ts_DAGHAR_dataset,
     'PSM': PSMSegLoader,
     'MSL': MSLSegLoader,
     'SMAP': SMAPSegLoader,
@@ -38,9 +43,10 @@ data_dict = {
 }
 
 
+
 def data_provider(args, flag):
-    Data = data_dict[args.data]
-    timeenc = 0 if args.embed != 'timeF' else 1
+    Data = data_dict[args.data]     # Dataset_Pretrain for 'pretrain
+    timeenc = 0 if args.embed != 'timeF' else 1 # timeF for default in pretrain (1)
 
     if flag == 'test':
         shuffle_flag = False
@@ -51,7 +57,7 @@ def data_provider(args, flag):
         shuffle_flag = True
         drop_last = True
         batch_size = args.batch_size
-        freq = args.freq
+        freq = args.freq                # defaults to H in pretrain
     if args.task_name == 'anomaly_detection':
         drop_last = False
         data_set = Data(
@@ -97,18 +103,18 @@ def data_provider(args, flag):
             collate_fn=lambda x: collate_fn(x, max_len=args.seq_len)
         )
         return data_set, data_loader
-    else:
+    else:       # Here we are in the pretrain task
         data_set = Data(
             configs=args,
-            root_path=args.root_path,
-            data_path=args.data_path,
-            flag=flag,
-            size=[args.seq_len, args.label_len, args.pred_len],
-            features=args.features,
-            target=args.target,
-            timeenc=timeenc,
-            freq=freq,
-            percent=args.percent
+            root_path=args.root_path,       # "./dataset/"
+            data_path=args.data_path,       # null for pretrain
+            flag=flag,                      # train, test, val
+            size=[args.seq_len, args.label_len, args.pred_len], # 1024, 0, 1024 for pretrain
+            features=args.features,         # M  for pretrain
+            target=args.target,             # OT
+            timeenc=timeenc,                # 1 for pretrain
+            freq=freq,                      # defaults to h in pretrain
+            percent=args.percent            # 100 for pretrain
         )
 
     if args.use_multi_gpu and args.use_gpu and flag == 'train':
