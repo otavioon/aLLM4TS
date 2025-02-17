@@ -475,3 +475,5 @@ hf_models
 dataset
 
 results
+lightning_logs/
+logs/
