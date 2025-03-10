@@ -14,63 +14,85 @@ import pdb
 import math
 from data_provider.uea import collate_fn
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
+
+
 def cal_accuracy(y_pred, y_true):
     return np.mean(y_pred == y_true)
+
+
 def adjust_learning_rate(optimizer, epoch, args):
     # lr = args.learning_rate * (0.2 ** (epoch // 2))
-    if args.lradj == 'type1':
+    if args.lradj == "type1":
         lr_adjust = {epoch: args.learning_rate * (0.5 ** ((epoch - 1) // 1))}
-    elif args.lradj == 'type2':
+    elif args.lradj == "type2":
         lr_adjust = {
-            2: 5e-5, 4: 1e-5, 6: 5e-6, 8: 1e-6,
-            10: 5e-7, 15: 1e-7, 20: 5e-8
+            2: 5e-5,
+            4: 1e-5,
+            6: 5e-6,
+            8: 1e-6,
+            10: 5e-7,
+            15: 1e-7,
+            20: 5e-8,
         }
     elif args.lradj == "cosine":
-        lr_adjust = {epoch: args.learning_rate /2 * (1 + math.cos(epoch / args.train_epochs * math.pi))}
+        lr_adjust = {
+            epoch: args.learning_rate
+            / 2
+            * (1 + math.cos(epoch / args.train_epochs * math.pi))
+        }
     if epoch in lr_adjust.keys():
         lr = lr_adjust[epoch]
         for param_group in optimizer.param_groups:
-            param_group['lr'] = lr
-        print('Updating learning rate to {}'.format(lr))
+            param_group["lr"] = lr
+        print("Updating learning rate to {}".format(lr))
+
+
 class Exp_Classification(Exp_Basic):
     def __init__(self, args):
         super(Exp_Classification, self).__init__(args)
 
     def _build_model(self):
         # model input depends on data
-        train_data, train_loader = self._get_data(flag='TRAIN')
-        test_data, test_loader = self._get_data(flag='TEST')
+        train_data, train_loader = self._get_data(flag="TRAIN")
+        test_data, test_loader = self._get_data(flag="TEST")
         self.args.seq_len = max(train_data.max_seq_len, test_data.max_seq_len)
         self.args.pred_len = 0
         self.args.enc_in = train_data.feature_df.shape[1]
         self.args.num_class = len(train_data.class_names)
         # model init
         model_dict = {
-            'LLM4TS_cls': LLM4TS_cls,
+            "LLM4TS_cls": LLM4TS_cls,
         }
         model = model_dict[self.args.model].Model(self.args).float()
 
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
-        
+
         if self.args.pt_sft:
-            pt_model = torch.load(os.path.join(self.args.pt_sft_base_dir, self.args.pt_sft_model + "/checkpoint.pth"))
-            model_dict =  model.state_dict()
-            state_dict = {k:v for k,v in pt_model.items() if k in model_dict.keys()}
-            if self.args.model == "LLM4TS_cls" :
-                state_dict.pop('revin_layer.affine_weight', None)
-                state_dict.pop('revin_layer.affine_bias', None)
-                state_dict.pop('in_layer.weight', None)
-                state_dict.pop('in_layer.bias', None)
-                state_dict.pop('out_layer.weight', None)
-                state_dict.pop('out_layer.bias', None)
+            pt_model = torch.load(
+                os.path.join(
+                    self.args.pt_sft_base_dir,
+                    self.args.pt_sft_model + "/checkpoint.pth",
+                )
+            )
+            model_dict = model.state_dict()
+            state_dict = {
+                k: v for k, v in pt_model.items() if k in model_dict.keys()
+            }
+            if self.args.model == "LLM4TS_cls":
+                state_dict.pop("revin_layer.affine_weight", None)
+                state_dict.pop("revin_layer.affine_bias", None)
+                state_dict.pop("in_layer.weight", None)
+                state_dict.pop("in_layer.bias", None)
+                state_dict.pop("out_layer.weight", None)
+                state_dict.pop("out_layer.bias", None)
             else:
-                state_dict.pop('revin_layer.affine_weight', None)
-                state_dict.pop('revin_layer.affine_bias', None)
-                state_dict.pop('out_layer.weight', None)
-                state_dict.pop('out_layer.bias', None)
-            
+                state_dict.pop("revin_layer.affine_weight", None)
+                state_dict.pop("revin_layer.affine_bias", None)
+                state_dict.pop("out_layer.weight", None)
+                state_dict.pop("out_layer.bias", None)
+
             model_dict.update(state_dict)
             model.load_state_dict(model_dict)
 
@@ -82,7 +104,9 @@ class Exp_Classification(Exp_Basic):
         return data_set, data_loader
 
     def _select_optimizer(self):
-        model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
+        model_optim = optim.Adam(
+            self.model.parameters(), lr=self.args.learning_rate
+        )
         return model_optim
 
     def _select_criterion(self):
@@ -113,18 +137,28 @@ class Exp_Classification(Exp_Basic):
 
         preds = torch.cat(preds, 0)
         trues = torch.cat(trues, 0)
-        probs = torch.nn.functional.softmax(preds)  # (total_samples, num_classes) est. prob. for each class and sample
-        predictions = torch.argmax(probs, dim=1).cpu().numpy()  # (total_samples,) int class index for each sample
+        probs = torch.nn.functional.softmax(
+            preds
+        )  # (total_samples, num_classes) est. prob. for each class and sample
+        predictions = (
+            torch.argmax(probs, dim=1).cpu().numpy()
+        )  # (total_samples,) int class index for each sample
         trues = trues.flatten().cpu().numpy()
         accuracy = cal_accuracy(predictions, trues)
 
         self.model.train()
         return total_loss, accuracy
-    
-    def save_projections(self,model,train_data,path,name):
-        
-        train_loader = torch.utils.data.DataLoader(train_data, batch_size=128, shuffle=False, drop_last=False, collate_fn=lambda x: collate_fn(x, max_len=self.args.seq_len))
-        
+
+    def save_projections(self, model, train_data, path, name):
+
+        train_loader = torch.utils.data.DataLoader(
+            train_data,
+            batch_size=128,
+            shuffle=False,
+            drop_last=False,
+            collate_fn=lambda x: collate_fn(x, max_len=self.args.seq_len),
+        )
+
         all_projections = []
         with torch.no_grad():
             for i, (batch_x, label, padding_mask) in enumerate(train_loader):
@@ -132,16 +166,20 @@ class Exp_Classification(Exp_Basic):
                 padding_mask = padding_mask.float().to(self.device)
                 label = label.to(self.device)
 
-                outputs, projections = model(batch_x, padding_mask, None, None, return_projections=True)
+                outputs, projections = model(
+                    batch_x, padding_mask, None, None, return_projections=True
+                )
                 all_projections.append(projections)
-            
-        np.save(os.path.join(path, f'all_projections_{name}.npy'), torch.cat(all_projections, 0).detach().cpu().numpy())
-        
+
+        np.save(
+            os.path.join(path, f"all_projections_{name}.npy"),
+            torch.cat(all_projections, 0).detach().cpu().numpy(),
+        )
 
     def train(self, setting):
-        train_data, train_loader = self._get_data(flag='TRAIN')
-        vali_data, vali_loader = self._get_data(flag='TEST')
-        test_data, test_loader = self._get_data(flag='TEST')
+        train_data, train_loader = self._get_data(flag="TRAIN")
+        vali_data, vali_loader = self._get_data(flag="TEST")
+        test_data, test_loader = self._get_data(flag="TEST")
 
         path = os.path.join(self.args.checkpoints, setting)
         if not os.path.exists(path):
@@ -150,7 +188,9 @@ class Exp_Classification(Exp_Basic):
         time_now = time.time()
 
         train_steps = len(train_loader)
-        early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
+        early_stopping = EarlyStopping(
+            patience=self.args.patience, verbose=True
+        )
 
         model_optim = self._select_optimizer()
         criterion = self._select_criterion()
@@ -164,10 +204,14 @@ class Exp_Classification(Exp_Basic):
 
             self.model.train()
             epoch_time = time.time()
-            
+
             all_projections = []
 
-            for i, (batch_x, label, padding_mask) in tqdm.tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Training. Epoch: {epoch + 1}"):
+            for i, (batch_x, label, padding_mask) in tqdm.tqdm(
+                enumerate(train_loader),
+                total=len(train_loader),
+                desc=f"Training. Epoch: {epoch + 1}",
+            ):
                 iter_count += 1
                 model_optim.zero_grad()
 
@@ -175,16 +219,28 @@ class Exp_Classification(Exp_Basic):
                 padding_mask = padding_mask.float().to(self.device)
                 label = label.to(self.device)
 
-                outputs, projections = self.model(batch_x, padding_mask, None, None, return_projections=True)
+                outputs, projections = self.model(
+                    batch_x, padding_mask, None, None, return_projections=True
+                )
                 all_projections.append(projections)
                 loss = criterion(outputs, label.long().squeeze(-1))
                 train_loss.append(loss.item())
 
                 if (i + 1) % 100 == 0:
-                    print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
+                    print(
+                        "\titers: {0}, epoch: {1} | loss: {2:.7f}".format(
+                            i + 1, epoch + 1, loss.item()
+                        )
+                    )
                     speed = (time.time() - time_now) / iter_count
-                    left_time = speed * ((self.args.train_epochs - epoch) * train_steps - i)
-                    print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
+                    left_time = speed * (
+                        (self.args.train_epochs - epoch) * train_steps - i
+                    )
+                    print(
+                        "\tspeed: {:.4f}s/iter; left time: {:.4f}s".format(
+                            speed, left_time
+                        )
+                    )
                     iter_count = 0
                     time_now = time.time()
 
@@ -192,40 +248,61 @@ class Exp_Classification(Exp_Basic):
                 nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=4.0)
                 model_optim.step()
 
-            print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
+            print(
+                "Epoch: {} cost time: {}".format(
+                    epoch + 1, time.time() - epoch_time
+                )
+            )
             train_loss = np.average(train_loss)
-            vali_loss, val_accuracy = self.vali(vali_data, vali_loader, criterion)
-            test_loss, test_accuracy = self.vali(test_data, test_loader, criterion)
+            vali_loss, val_accuracy = self.vali(
+                vali_data, vali_loader, criterion
+            )
+            test_loss, test_accuracy = self.vali(
+                test_data, test_loader, criterion
+            )
             if epoch == 0:
-                self.save_projections(self.model,train_data,path,'train_first')
-
+                self.save_projections(
+                    self.model, train_data, path, "train_first"
+                )
 
             print(
-                "Epoch: {0}, Steps: {1} | Train Loss: {2:.3f} Vali Loss: {3:.3f} Vali Acc: {4:.3f} Test Loss: {5:.3f} Test Acc: {6:.3f}"
-                .format(epoch + 1, train_steps, train_loss, vali_loss, val_accuracy, test_loss, test_accuracy))
+                "Epoch: {0}, Steps: {1} | Train Loss: {2:.3f} Vali Loss: {3:.3f} Vali Acc: {4:.3f} Test Loss: {5:.3f} Test Acc: {6:.3f}".format(
+                    epoch + 1,
+                    train_steps,
+                    train_loss,
+                    vali_loss,
+                    val_accuracy,
+                    test_loss,
+                    test_accuracy,
+                )
+            )
             early_stopping(-val_accuracy, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
                 break
             if (epoch + 1) % 5 == 0:
                 adjust_learning_rate(model_optim, epoch + 1, self.args)
-        
-        self.save_projections(self.model,train_data,path,'train_last')
 
-        best_model_path = path + '/' + 'checkpoint.pth'
+        self.save_projections(self.model, train_data, path, "train_last")
+
+        best_model_path = path + "/" + "checkpoint.pth"
         self.model.load_state_dict(torch.load(best_model_path))
 
         return self.model
 
     def test(self, setting, test=0):
-        test_data, test_loader = self._get_data(flag='TEST')
+        test_data, test_loader = self._get_data(flag="TEST")
         if test:
-            print('loading model')
-            self.model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint.pth')))
+            print("loading model")
+            self.model.load_state_dict(
+                torch.load(
+                    os.path.join("./checkpoints/" + setting, "checkpoint.pth")
+                )
+            )
 
         preds = []
         trues = []
-        folder_path = './test_results/' + setting + '/'
+        folder_path = "./test_results/" + setting + "/"
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
@@ -243,24 +320,28 @@ class Exp_Classification(Exp_Basic):
 
         preds = torch.cat(preds, 0)
         trues = torch.cat(trues, 0)
-        print('test shape:', preds.shape, trues.shape)
+        print("test shape:", preds.shape, trues.shape)
 
-        probs = torch.nn.functional.softmax(preds)  # (total_samples, num_classes) est. prob. for each class and sample
-        predictions = torch.argmax(probs, dim=1).cpu().numpy()  # (total_samples,) int class index for each sample
+        probs = torch.nn.functional.softmax(
+            preds
+        )  # (total_samples, num_classes) est. prob. for each class and sample
+        predictions = (
+            torch.argmax(probs, dim=1).cpu().numpy()
+        )  # (total_samples,) int class index for each sample
         trues = trues.flatten().cpu().numpy()
         accuracy = cal_accuracy(predictions, trues)
 
         # result save
-        folder_path = './results/' + setting + '/'
+        folder_path = "./results/" + setting + "/"
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
-        print('accuracy:{}'.format(accuracy))
-        file_name='result_classification.txt'
-        f = open(os.path.join(folder_path,file_name), 'a')
+        print("accuracy:{}".format(accuracy))
+        file_name = "result_classification.txt"
+        f = open(os.path.join(folder_path, file_name), "a")
         f.write(setting + "  \n")
-        f.write('accuracy:{}'.format(accuracy))
-        f.write('\n')
-        f.write('\n')
+        f.write("accuracy:{}".format(accuracy))
+        f.write("\n")
+        f.write("\n")
         f.close()
         return
