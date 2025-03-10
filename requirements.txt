@@ -16,3 +16,4 @@ torchinfo
 torchsummary
 tqdm
 transformers
+umap-learn
