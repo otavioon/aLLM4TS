@@ -66,6 +66,7 @@ def train(
     train_epochs: int = 100,
     accelerator: str = "gpu",
     devices: int = 1,
+    resume_from: str = "",
 ):
     assert data in [
         "pretrain",
@@ -110,7 +111,7 @@ def train(
         val_dataset = Pretrain_allm4ts_DAGHAR_dataset(
             flag="val", **default_pretrain_args
         )
-        
+
     train_dataset = TFC_Dataset_Wrapper(train_dataset)
     val_dataset = TFC_Dataset_Wrapper(val_dataset)
 
@@ -158,6 +159,8 @@ def train(
         ModelCheckpoint(
             filename=model_name + "-{epoch:02d}",
             every_n_epochs=1,
+            save_top_k=-1,
+            save_last=True,
         ),
         EarlyStopping(
             patience=40,
@@ -180,10 +183,18 @@ def train(
         logger=logger,
     )
 
+    ckpt_path = None
+    if resume_from:
+        ckpt_path = os.path.join(
+            checkpoints, model_name, ckpt_version, "checkpoints", resume_from
+        )
+        print(f"Resuming from {ckpt_path}")
+
     trainer.fit(
         model,
         train_dataloaders=train_dataloader,
         val_dataloaders=val_dataloader,
+        ckpt_path=ckpt_path,
     )
 
     print("Training Done!")
@@ -237,6 +248,12 @@ def main():
     parser.add_argument(
         "--devices", type=int, default=1, help="Number of devices"
     )
+    parser.add_argument(
+        "--resume_from",
+        type=str,
+        default=None,
+        help="Continue training from a specific checkpoint (without root path)",
+    )
 
     args = parser.parse_args()
 
@@ -252,6 +269,7 @@ def main():
         train_epochs=args.train_epochs,
         accelerator=args.accelerator,
         devices=args.devices,
+        resume_from=args.resume_from,
     )
 
 
