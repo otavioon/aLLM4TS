@@ -94,6 +94,7 @@ def data_provider(args, flag):
         data_set = Data(
             root_path=args.root_path,
             flag=flag,
+            perform_instance_norm=args.perform_instance_norm,
         )
 
         data_loader = DataLoader(

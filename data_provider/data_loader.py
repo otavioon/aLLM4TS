@@ -1840,7 +1840,7 @@ class UEAloader(Dataset):
             (Moreover, script argument overrides this attribute)
     """
 
-    def __init__(self, root_path, file_list=None, limit_size=None, flag=None):
+    def __init__(self, root_path, file_list=None, limit_size=None, flag=None, perform_instance_norm: bool = True):
         self.root_path = root_path
         self.all_df, self.labels_df = self.load_all(
             root_path, file_list=file_list, flag=flag
@@ -1864,6 +1864,7 @@ class UEAloader(Dataset):
         # pre_process
         normalizer = Normalizer()
         self.feature_df = normalizer.normalize(self.feature_df)
+        self.perform_instance_norm = perform_instance_norm
         print(len(self.all_IDs))
 
     def load_all(self, root_path, file_list=None, flag=None):
@@ -1972,19 +1973,23 @@ class UEAloader(Dataset):
             return case
 
     def __getitem__(self, ind):
-        return self.instance_norm(
-            torch.from_numpy(self.feature_df.loc[self.all_IDs[ind]].values)
-        ), torch.from_numpy(self.labels_df.loc[self.all_IDs[ind]].values)
+        X =  torch.from_numpy(self.feature_df.loc[self.all_IDs[ind]].values)
+        y = torch.from_numpy(self.labels_df.loc[self.all_IDs[ind]].values)
+        if self.perform_instance_norm:
+            X = self.instance_norm(X)
+        return X, y
 
     def __len__(self):
         return len(self.all_IDs)
 
 
 class DAGHAR(Dataset):
-    def __init__(self, root_path, flag="train"):
+    def __init__(
+        self, root_path, flag="train", perform_instance_norm: bool = True
+    ):
         self.flag = flag.lower()
         self.root_path = Path(root_path)
-        
+
         if self.flag == "train":
             self.file = self.root_path / "train.csv"
         elif self.flag == "val":
@@ -1996,6 +2001,8 @@ class DAGHAR(Dataset):
         self.max_seq_len = 60
         self.feature_df = self.dataset.data.copy().T
         self.class_names = list(range(6))
+        self.perform_instance_norm = perform_instance_norm
+        print(f"DAGHAR from {self.file} with {len(self.dataset)} samples. Instance norm: {self.perform_instance_norm}")
 
     def _read_data(self):
         dataset = MultiModalSeriesCSVDataset(
@@ -2010,10 +2017,10 @@ class DAGHAR(Dataset):
             ],
             label="standard activity code",
             features_as_channels=True,
-            cast_to="float64"
+            cast_to="float64",
         )
         return dataset
-    
+
     def instance_norm(self, case):
         mean = case.mean(0, keepdim=True)
         case = case - mean
@@ -2023,7 +2030,6 @@ class DAGHAR(Dataset):
         case /= stdev
         return case
 
-
     def __getitem__(self, index):
         x, y = self.dataset[index]
         x = x.T
@@ -2031,7 +2037,8 @@ class DAGHAR(Dataset):
         y = np.expand_dims(y, axis=0)
         x = torch.from_numpy(x)
         y = torch.from_numpy(y)
-        # x = self.instance_norm(x)
+        if self.perform_instance_norm:
+            x = self.instance_norm(x)
         return x, y
 
     def __len__(self):
