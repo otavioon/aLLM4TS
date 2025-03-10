@@ -59,6 +59,7 @@ parser.add_argument('--pt_data', type=str, default='null', help='the dataset use
 parser.add_argument('--pt_sft', type=int, default=0, help='whether continue pretrain')
 parser.add_argument('--pt_sft_base_dir', type=str, default='null', help='the base model dir for pt_sft')
 parser.add_argument('--pt_sft_model', type=str, default='null', help='the base model for pt_sft')
+parser.add_argument("--load_last", action="store_true", help="load last checkpoint")
 
 # forecasting task
 parser.add_argument('--seq_len', type=int, default=720, help='input sequence length')

@@ -70,12 +70,40 @@ class Exp_Classification(Exp_Basic):
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
 
         if self.args.pt_sft:
-            pt_model = torch.load(
-                os.path.join(
-                    self.args.pt_sft_base_dir,
-                    self.args.pt_sft_model + "/checkpoint.pth",
+
+            if self.args.load_last:
+                base_model_dir = os.path.join(
+                    self.args.pt_sft_base_dir, self.args.pt_sft_model
                 )
-            )
+                print(f"Looking for checkpoints in '{base_model_dir}'")
+                # Get the last modified file in base_model_dir ending with 'ckpt'
+                ckpt_files = [
+                    f for f in os.listdir(base_model_dir) if f.endswith(".ckpt")
+                ]
+                if not ckpt_files:
+                    raise FileNotFoundError(
+                        "No checkpoint files found in the directory."
+                    )
+                ckpt_file = max(
+                    ckpt_files,
+                    key=lambda f: os.path.getmtime(
+                        os.path.join(base_model_dir, f)
+                    ),
+                )
+                ckpt_file = os.path.join(base_model_dir, ckpt_file)
+
+                print(
+                    f"Loading model from checkpoint (last modified): {ckpt_file}"
+                )
+            else:
+                ckpt_file = os.path.join(
+                    self.args.pt_sft_base_dir,
+                    self.args.pt_sft_model,
+                    "checkpoint.pth",
+                )
+                print(f"Loading model from checkpoint: {ckpt_file}")
+
+            pt_model = torch.load(ckpt_file)
             model_dict = model.state_dict()
             state_dict = {
                 k: v for k, v in pt_model.items() if k in model_dict.keys()
@@ -149,10 +177,9 @@ class Exp_Classification(Exp_Basic):
         self.model.train()
         return total_loss, accuracy
 
-    def save_projections(self, model, train_data, path, name):
-
-        train_loader = torch.utils.data.DataLoader(
-            train_data,
+    def save_projections(self, model, data, path, name):
+        dataloader = torch.utils.data.DataLoader(
+            data,
             batch_size=128,
             shuffle=False,
             drop_last=False,
@@ -161,20 +188,29 @@ class Exp_Classification(Exp_Basic):
 
         all_projections = []
         with torch.no_grad():
-            for i, (batch_x, label, padding_mask) in enumerate(train_loader):
+            for i, (batch_x, label, padding_mask) in tqdm.tqdm(
+                enumerate(dataloader),
+                total=len(dataloader),
+                desc=f"Saving projections: {name}",
+            ):
                 batch_x = batch_x.float().to(self.device)
                 padding_mask = padding_mask.float().to(self.device)
                 label = label.to(self.device)
 
-                outputs, projections = model(
+                _, projections = model(
                     batch_x, padding_mask, None, None, return_projections=True
                 )
                 all_projections.append(projections)
 
+        os.makedirs(path, exist_ok=True)
+        save_path = os.path.join(path, f"{name}.npy")
+
         np.save(
-            os.path.join(path, f"all_projections_{name}.npy"),
+            save_path,
             torch.cat(all_projections, 0).detach().cpu().numpy(),
         )
+
+        print(f"Projections saved to {save_path}")
 
     def train(self, setting):
         train_data, train_loader = self._get_data(flag="TRAIN")
@@ -194,8 +230,15 @@ class Exp_Classification(Exp_Basic):
 
         model_optim = self._select_optimizer()
         criterion = self._select_criterion()
-
-        all_projections = []
+        self.save_projections(
+            self.model, train_data, path, "train_projections_before_training"
+        )
+        self.save_projections(
+            self.model, vali_data, path, "valid_projections_before_training"
+        )
+        self.save_projections(
+            self.model, test_data, path, "test_projections_before_training"
+        )
 
         for epoch in range(self.args.train_epochs):
             print(f"Epoch: {epoch + 1}...")
@@ -204,8 +247,6 @@ class Exp_Classification(Exp_Basic):
 
             self.model.train()
             epoch_time = time.time()
-
-            all_projections = []
 
             for i, (batch_x, label, padding_mask) in tqdm.tqdm(
                 enumerate(train_loader),
@@ -222,7 +263,6 @@ class Exp_Classification(Exp_Basic):
                 outputs, projections = self.model(
                     batch_x, padding_mask, None, None, return_projections=True
                 )
-                all_projections.append(projections)
                 loss = criterion(outputs, label.long().squeeze(-1))
                 train_loss.append(loss.item())
 
@@ -260,10 +300,6 @@ class Exp_Classification(Exp_Basic):
             test_loss, test_accuracy = self.vali(
                 test_data, test_loader, criterion
             )
-            if epoch == 0:
-                self.save_projections(
-                    self.model, train_data, path, "train_first"
-                )
 
             print(
                 "Epoch: {0}, Steps: {1} | Train Loss: {2:.3f} Vali Loss: {3:.3f} Vali Acc: {4:.3f} Test Loss: {5:.3f} Test Acc: {6:.3f}".format(
@@ -283,10 +319,18 @@ class Exp_Classification(Exp_Basic):
             if (epoch + 1) % 5 == 0:
                 adjust_learning_rate(model_optim, epoch + 1, self.args)
 
-        self.save_projections(self.model, train_data, path, "train_last")
-
         best_model_path = path + "/" + "checkpoint.pth"
         self.model.load_state_dict(torch.load(best_model_path))
+
+        self.save_projections(
+            self.model, train_data, path, "train_projections_after_training"
+        )
+        self.save_projections(
+            self.model, vali_data, path, "valid_projections_after_training"
+        )
+        self.save_projections(
+            self.model, test_data, path, "test_projections_after_training"
+        )
 
         return self.model
 
