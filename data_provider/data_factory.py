@@ -13,6 +13,7 @@ from data_provider.data_loader import (
     SWATSegLoader,
     Dataset_M4,
     UEAloader,
+    DAGHAR,
     Pretrain_allm4ts_ES_dataset,
     Pretrain_allm4ts_DAGHAR_dataset
     
@@ -39,7 +40,8 @@ data_dict = {
     'SMD': SMDSegLoader,
     'SWaT': SWATSegLoader,
     'm4': Dataset_M4,
-    'UEA': UEAloader
+    'UEA': UEAloader,
+    'DAGHAR': DAGHAR,
 }
 
 
@@ -98,10 +100,13 @@ def data_provider(args, flag):
             data_set,
             batch_size=batch_size,
             shuffle=shuffle_flag,
+            # shuffle=False,
             num_workers=args.num_workers,
             drop_last=drop_last,
             collate_fn=lambda x: collate_fn(x, max_len=args.seq_len)
         )
+        print("**************************Data loader length: ", len(data_loader))
+        
         return data_set, data_loader
     else:       # Here we are in the pretrain task
         data_set = Data(

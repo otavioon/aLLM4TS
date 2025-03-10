@@ -71,7 +71,7 @@ from pathlib import Path
 #         freq="h",
 #         percent=100,
 #         return_values="x_y_mark",
-#         *args, 
+#         *args,
 #         **kwargs
 #     ):
 #         assert return_values in ["x", "x_y", "x_y_mark"]
@@ -337,7 +337,7 @@ class Base_Har_Dataset(Dataset):
         seq_y = seq_y.reshape(1, -1).T
         seq_mark_x = np.zeros((len(seq_x), 4))
         seq_mark_y = np.zeros((len(seq_y), 4))
-        
+
         # print(f"DAGHAR: {seq_x.shape}, {seq_y.shape}, {seq_mark_x.shape}, {seq_mark_y.shape}")
 
         return seq_x, seq_y, seq_mark_x, seq_mark_y
@@ -361,12 +361,11 @@ class Dataset_ExtraSensory(Base_Har_Dataset):
             *args,
             **kwargs,
         )
-        
+
         print(f"ROOT PATH: {root_path}")
         print(f"ARGS: {args}")
         print(f"KWARGS: {kwargs}")
-    
-    
+
     def _get_dataset_data(self) -> np.ndarray:
         print(f"Loading ExtraSensory data from {self.root_dir}")
         rng = random.Random(self.seed)
@@ -412,18 +411,18 @@ class Dataset_ExtraSensory(Base_Har_Dataset):
 class Dataset_DAGHAR(Base_Har_Dataset):
     def __init__(self, root_path, *args, **kwargs):
         kwargs.pop("root_path", None)
-        root_path="/workspaces/HIAAC-KR-Dev-Container/some_datasets/DAGHAR/standardized_view/"
-        
+        root_path = "/workspaces/HIAAC-KR-Dev-Container/some_datasets/DAGHAR/standardized_view/"
+
         super().__init__(
-            root_path=root_path,    
+            root_path=root_path,
             *args,
             **kwargs,
         )
-        
+
         print(f"ROOT PATH: {root_path}")
         print(f"ARGS: {args}")
         print(f"KWARGS: {kwargs}")
-    
+
     def _get_dataset_data(self) -> np.ndarray:
         print(f"Loading DAGHAR data from {self.root_dir}")
         if self.flag == "train":
@@ -459,7 +458,7 @@ class Dataset_DAGHAR(Base_Har_Dataset):
 # class Dataset_DAGHAR(Dataset):
 #     def __init__(self, *args, **kwargs):
 #         flag = kwargs.get("flag")
-        
+
 #         root_dir = Path("/workspaces/HIAAC-KR-Dev-Container/workspace/aLLM4TS/dataset/")
 #         self.path = root_dir / f"daghar_{flag}.npz"
 #         data = np.load(self.path)
@@ -468,13 +467,14 @@ class Dataset_DAGHAR(Base_Har_Dataset):
 #         self.y = data["Y"].astype(np.float32)
 #         self.marks = np.zeros((self.X.shape[1], 4))
 #         print(f"DAGHAR LOADED: X shape: {self.X.shape}, y shape: {self.y.shape}, marks shape: {self.marks.shape}")
-        
+
 #     def __getitem__(self, index):
 #         return self.X[index], self.y[index], self.marks, self.marks
-    
+
 #     def __len__(self):
 #         return len(self.X)
-    
+
+
 class MyConcatDataset(Dataset):
     def __init__(self, datasets):
         self.concat_dataset = ConcatDataset(datasets)
@@ -508,11 +508,22 @@ class Pretrain_allm4ts_DAGHAR_dataset(MyConcatDataset):
 
 
 class Dataset_pretrain(Dataset):
-    def __init__(self, configs, root_path, flag='train', size=None,
-                 features='S', data_path='ETTh1.csv',
-                 target='OT', scale=True, timeenc=0, freq='h', percent=100):
+    def __init__(
+        self,
+        configs,
+        root_path,
+        flag="train",
+        size=None,
+        features="S",
+        data_path="ETTh1.csv",
+        target="OT",
+        scale=True,
+        timeenc=0,
+        freq="h",
+        percent=100,
+    ):
 
-        self.configs = configs 
+        self.configs = configs
         self.patch_len = configs.patch_len
         self.stride = configs.stride
         if size == None:
@@ -521,9 +532,9 @@ class Dataset_pretrain(Dataset):
             self.seq_len = size[0]
             self.label_len = size[1]
             self.pred_len = size[2]
-        
-        assert flag in ['train', 'test', 'val']
-        type_map = {'train': 0, 'val': 1, 'test': 2}
+
+        assert flag in ["train", "test", "val"]
+        type_map = {"train": 0, "val": 1, "test": 2}
         self.flag = flag
         self.set_type = type_map[flag]
 
@@ -538,49 +549,73 @@ class Dataset_pretrain(Dataset):
         self.data_path = data_path
         self.dataset_loc = None
         self.another_dataset = None
-        
+
         self.__read_data__()
 
     def __read_data__(self):
         self.scaler = StandardScaler()
-        pt_datasets = self.configs.pt_data.split('_')
-        
+        pt_datasets = self.configs.pt_data.split("_")
+
         data_list = []
         data_stamp_list = []
-        
-        for pt_dataset in pt_datasets:            
-            df_raw = pd.read_csv(os.path.join(self.root_path, f"{pt_dataset}.csv"))
+
+        for pt_dataset in pt_datasets:
+            df_raw = pd.read_csv(
+                os.path.join(self.root_path, f"{pt_dataset}.csv")
+            )
             dataset_len = len(df_raw)
-            if 'ETTh' in pt_dataset:
-                border1s = [0, 12 * 30 * 24 - self.seq_len, 12 * 30 * 24 + 4 * 30 * 24 - self.seq_len]
-                border2s = [12 * 30 * 24, 12 * 30 * 24 + 4 * 30 * 24, 12 * 30 * 24 + 8 * 30 * 24]
+            if "ETTh" in pt_dataset:
+                border1s = [
+                    0,
+                    12 * 30 * 24 - self.seq_len,
+                    12 * 30 * 24 + 4 * 30 * 24 - self.seq_len,
+                ]
+                border2s = [
+                    12 * 30 * 24,
+                    12 * 30 * 24 + 4 * 30 * 24,
+                    12 * 30 * 24 + 8 * 30 * 24,
+                ]
                 border1 = border1s[self.set_type]
                 border2 = border2s[self.set_type]
-            elif 'ETTm' in pt_dataset:
-                border1s = [0, 12 * 30 * 24 * 4 - self.seq_len, 12 * 30 * 24 * 4 + 4 * 30 * 24 * 4 - self.seq_len]
-                border2s = [12 * 30 * 24 * 4, 12 * 30 * 24 * 4 + 4 * 30 * 24 * 4, 12 * 30 * 24 * 4 + 8 * 30 * 24 * 4]
+            elif "ETTm" in pt_dataset:
+                border1s = [
+                    0,
+                    12 * 30 * 24 * 4 - self.seq_len,
+                    12 * 30 * 24 * 4 + 4 * 30 * 24 * 4 - self.seq_len,
+                ]
+                border2s = [
+                    12 * 30 * 24 * 4,
+                    12 * 30 * 24 * 4 + 4 * 30 * 24 * 4,
+                    12 * 30 * 24 * 4 + 8 * 30 * 24 * 4,
+                ]
                 border1 = border1s[self.set_type]
                 border2 = border2s[self.set_type]
             else:
                 num_train = int(dataset_len * 0.7)
                 num_test = int(dataset_len * 0.2)
                 num_vali = dataset_len - num_train - num_test
-                border1s = [0, num_train - self.seq_len, dataset_len - num_test - self.seq_len]
+                border1s = [
+                    0,
+                    num_train - self.seq_len,
+                    dataset_len - num_test - self.seq_len,
+                ]
                 border2s = [num_train, num_train + num_vali, dataset_len]
                 border1 = border1s[self.set_type]
                 border2 = border2s[self.set_type]
             if self.set_type == 0:
-                border2 = (border2 - self.seq_len) * self.percent // 100 + self.seq_len
-            if self.features == 'M' or self.features == 'MS':
+                border2 = (
+                    border2 - self.seq_len
+                ) * self.percent // 100 + self.seq_len
+            if self.features == "M" or self.features == "MS":
                 cols_data = df_raw.columns[1:]
                 df_data = df_raw[cols_data]
-            elif self.features == 'S':
+            elif self.features == "S":
                 df_data = df_raw[[self.target]]
 
             df_data = df_data.values
 
             if self.scale:
-                train_data = df_data[border1s[0]:border2s[0]]
+                train_data = df_data[border1s[0] : border2s[0]]
                 self.scaler.fit(train_data)
                 data = self.scaler.transform(df_data)
             else:
@@ -588,26 +623,34 @@ class Dataset_pretrain(Dataset):
 
             data = data[border1:border2]
             data = data.reshape((len(data) * len(cols_data), 1))
-            df_stamp = df_raw[['date']][border1:border2]
-            df_stamp['date'] = pd.to_datetime(df_stamp.date)
+            df_stamp = df_raw[["date"]][border1:border2]
+            df_stamp["date"] = pd.to_datetime(df_stamp.date)
             if self.timeenc == 0:
-                df_stamp['month'] = df_stamp.date.apply(lambda row: row.month, 1)
-                df_stamp['day'] = df_stamp.date.apply(lambda row: row.day, 1)
-                df_stamp['weekday'] = df_stamp.date.apply(lambda row: row.weekday(), 1)
-                df_stamp['hour'] = df_stamp.date.apply(lambda row: row.hour, 1)
-                data_stamp = df_stamp.drop(['date'], axis=1).values
+                df_stamp["month"] = df_stamp.date.apply(
+                    lambda row: row.month, 1
+                )
+                df_stamp["day"] = df_stamp.date.apply(lambda row: row.day, 1)
+                df_stamp["weekday"] = df_stamp.date.apply(
+                    lambda row: row.weekday(), 1
+                )
+                df_stamp["hour"] = df_stamp.date.apply(lambda row: row.hour, 1)
+                data_stamp = df_stamp.drop(["date"], axis=1).values
             elif self.timeenc == 1:
-                data_stamp = time_features(pd.to_datetime(df_stamp['date'].values), freq=self.freq)
+                data_stamp = time_features(
+                    pd.to_datetime(df_stamp["date"].values), freq=self.freq
+                )
                 data_stamp = data_stamp.transpose(1, 0)
 
             data_list.append(data)
-            df_stamp = np.array([data_stamp for i in range(len(cols_data))]).reshape((len(data_stamp) * len(cols_data), 4))
+            df_stamp = np.array(
+                [data_stamp for i in range(len(cols_data))]
+            ).reshape((len(data_stamp) * len(cols_data), 4))
             data_stamp_list.append(df_stamp)
-            
+
         self.data = np.concatenate(data_list, axis=0)
         self.data_stamp = np.concatenate(data_stamp_list, axis=0)
 
-    def __getitem__(self, index):       
+    def __getitem__(self, index):
         s_begin = index
         s_end = s_begin + self.seq_len
         r_begin = s_begin + self.stride
@@ -617,9 +660,9 @@ class Dataset_pretrain(Dataset):
         seq_y = self.data[r_begin:r_end]
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
-        
+
         # print(seq_x.shape, seq_y.shape, seq_x_mark.shape, seq_y_mark.shape)
-        
+
         return seq_x, seq_y, seq_x_mark, seq_y_mark
 
     def __len__(self):
@@ -1935,3 +1978,61 @@ class UEAloader(Dataset):
 
     def __len__(self):
         return len(self.all_IDs)
+
+
+class DAGHAR(Dataset):
+    def __init__(self, root_path, flag="train"):
+        self.flag = flag.lower()
+        self.root_path = Path(root_path)
+        
+        if self.flag == "train":
+            self.file = self.root_path / "train.csv"
+        elif self.flag == "val":
+            self.file = self.root_path / "validation.csv"
+        else:
+            self.file = self.root_path / "test.csv"
+
+        self.dataset = self._read_data()
+        self.max_seq_len = 60
+        self.feature_df = self.dataset.data.copy().T
+        self.class_names = list(range(6))
+
+    def _read_data(self):
+        dataset = MultiModalSeriesCSVDataset(
+            data_path=self.file,
+            feature_prefixes=[
+                "accel-x",
+                "accel-y",
+                "accel-z",
+                "gyro-x",
+                "gyro-y",
+                "gyro-z",
+            ],
+            label="standard activity code",
+            features_as_channels=True,
+            cast_to="float64"
+        )
+        return dataset
+    
+    def instance_norm(self, case):
+        mean = case.mean(0, keepdim=True)
+        case = case - mean
+        stdev = torch.sqrt(
+            torch.var(case, dim=1, keepdim=True, unbiased=False) + 1e-5
+        )
+        case /= stdev
+        return case
+
+
+    def __getitem__(self, index):
+        x, y = self.dataset[index]
+        x = x.T
+        y = np.array(y, dtype=np.int8)
+        y = np.expand_dims(y, axis=0)
+        x = torch.from_numpy(x)
+        y = torch.from_numpy(y)
+        # x = self.instance_norm(x)
+        return x, y
+
+    def __len__(self):
+        return len(self.dataset)
