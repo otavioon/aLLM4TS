@@ -12,6 +12,7 @@ import warnings
 import numpy as np
 import pdb
 import math
+from data_provider.uea import collate_fn
 
 warnings.filterwarnings('ignore')
 def cal_accuracy(y_pred, y_true):
@@ -119,6 +120,23 @@ class Exp_Classification(Exp_Basic):
 
         self.model.train()
         return total_loss, accuracy
+    
+    def save_projections(self,model,train_data,path,name):
+        
+        train_loader = torch.utils.data.DataLoader(train_data, batch_size=128, shuffle=False, drop_last=False, collate_fn=lambda x: collate_fn(x, max_len=self.args.seq_len))
+        
+        all_projections = []
+        with torch.no_grad():
+            for i, (batch_x, label, padding_mask) in enumerate(train_loader):
+                batch_x = batch_x.float().to(self.device)
+                padding_mask = padding_mask.float().to(self.device)
+                label = label.to(self.device)
+
+                outputs, projections = model(batch_x, padding_mask, None, None, return_projections=True)
+                all_projections.append(projections)
+            
+        np.save(os.path.join(path, f'all_projections_{name}.npy'), torch.cat(all_projections, 0).detach().cpu().numpy())
+        
 
     def train(self, setting):
         train_data, train_loader = self._get_data(flag='TRAIN')
@@ -137,6 +155,8 @@ class Exp_Classification(Exp_Basic):
         model_optim = self._select_optimizer()
         criterion = self._select_criterion()
 
+        all_projections = []
+
         for epoch in range(self.args.train_epochs):
             print(f"Epoch: {epoch + 1}...")
             iter_count = 0
@@ -144,6 +164,8 @@ class Exp_Classification(Exp_Basic):
 
             self.model.train()
             epoch_time = time.time()
+            
+            all_projections = []
 
             for i, (batch_x, label, padding_mask) in tqdm.tqdm(enumerate(train_loader), total=len(train_loader), desc=f"Training. Epoch: {epoch + 1}"):
                 iter_count += 1
@@ -153,7 +175,8 @@ class Exp_Classification(Exp_Basic):
                 padding_mask = padding_mask.float().to(self.device)
                 label = label.to(self.device)
 
-                outputs = self.model(batch_x, padding_mask, None, None)
+                outputs, projections = self.model(batch_x, padding_mask, None, None, return_projections=True)
+                all_projections.append(projections)
                 loss = criterion(outputs, label.long().squeeze(-1))
                 train_loss.append(loss.item())
 
@@ -173,6 +196,9 @@ class Exp_Classification(Exp_Basic):
             train_loss = np.average(train_loss)
             vali_loss, val_accuracy = self.vali(vali_data, vali_loader, criterion)
             test_loss, test_accuracy = self.vali(test_data, test_loader, criterion)
+            if epoch == 0:
+                self.save_projections(self.model,train_data,path,'train_first')
+
 
             print(
                 "Epoch: {0}, Steps: {1} | Train Loss: {2:.3f} Vali Loss: {3:.3f} Vali Acc: {4:.3f} Test Loss: {5:.3f} Test Acc: {6:.3f}"
@@ -183,6 +209,8 @@ class Exp_Classification(Exp_Basic):
                 break
             if (epoch + 1) % 5 == 0:
                 adjust_learning_rate(model_optim, epoch + 1, self.args)
+        
+        self.save_projections(self.model,train_data,path,'train_last')
 
         best_model_path = path + '/' + 'checkpoint.pth'
         self.model.load_state_dict(torch.load(best_model_path))
