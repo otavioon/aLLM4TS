@@ -241,7 +241,21 @@ class Exp_Main(Exp_Basic):
             max_lr=self.args.learning_rate,
         )
 
-        for epoch in range(self.args.train_epochs):
+        epoch_start = 0
+
+        if self.args.resume_from is not None:
+            ckpt_file = os.path.join(
+                path, self.args.resume_from
+            )
+            epoch_start = self.args.resume_from_epoch
+            
+            self.model.load_state_dict(torch.load(ckpt_file))
+            print(f"----------> The training is resumed from epoch {epoch_start} with checkpoint file: {ckpt_file}")
+        else:
+            print("----------> The training is started from scratch")
+            
+
+        for epoch in range(epoch_start, self.args.train_epochs, 1):
             iter_count = 0
             train_loss = []
 
