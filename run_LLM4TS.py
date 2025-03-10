@@ -123,6 +123,9 @@ parser.add_argument('--use_multi_gpu', action='store_true', help='use multiple g
 parser.add_argument('--devices', type=str, default='0,1,2,3', help='device ids of multile gpus')
 parser.add_argument('--test_flop', action='store_true', default=False, help='See utils/tools for usage')
 
+parser.add_argument("--resume_from", type=str, default=None, help="continue training from a specific checkpoint (name of the checkpoint file without the checkpoint directory)")
+parser.add_argument("--resume_from_epoch", type=int, default=0, help="epoch to continue training from")
+
 
 if __name__ == '__main__':
 
@@ -163,6 +166,7 @@ if __name__ == '__main__':
 
     if args.is_training:
         for ii in range(args.itr):
+            print("------ Starting training iteration {} ------".format(ii))
             setting = '{}_sl{}_pl{}_llml{}_lr{}_bs{}_percent{}_{}_{}'.format(
                 args.model_id,
                 args.seq_len,
