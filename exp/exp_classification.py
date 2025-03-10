@@ -364,6 +364,13 @@ class Exp_Classification(Exp_Basic):
 
         preds = torch.cat(preds, 0)
         trues = torch.cat(trues, 0)
+        path = os.path.join(self.args.checkpoints, setting)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        save_path = os.path.join(path, "test_logits.npy")
+        np.save(save_path, preds.detach().cpu().numpy())
+        print(f"Test logits saved to {save_path}")
+        
         print("test shape:", preds.shape, trues.shape)
 
         probs = torch.nn.functional.softmax(
