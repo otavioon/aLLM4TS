@@ -21,4 +21,5 @@ python run_tfc_pretrain.py   \
     --data pretrain_allm4ts_daghar \
     --train_epochs 100 \
     --accelerator gpu \
-    --devices 1 2>&1 | tee ${CKPT_DIR}/log.txt
+    --devices 1 \
+    --resume_from last.ckpt 2>&1 | tee ${CKPT_DIR}/log.txt

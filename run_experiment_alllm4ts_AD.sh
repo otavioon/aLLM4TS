@@ -46,7 +46,9 @@ python run_LLM4TS.py \
 --use_gpu 1 \
 --devices 0 \
 --gpu 0 \
---num_workers 0 2>&1 | tee ${CKPT_DIR}/log.txt
+--num_workers 0 \
+--resume_from checkpoint_epoch_21.ckpt \
+--resume_from_epoch 21 2>&1 | tee ${CKPT_DIR}/log.txt
 
 
 # Num Workers = 0 --> https://discuss.pytorch.org/t/guidelines-for-assigning-num-workers-to-dataloader/813/17
