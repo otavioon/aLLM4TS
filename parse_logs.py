@@ -4,13 +4,22 @@ import numpy as np
 import pandas as pd
 
 def parse_log(log_file):
-    accs = []
+    val_accs = []
+    test_accs = []
+    
     with open(log_file, 'r') as f:
         for line in f:
-            if "accuracy:" in line:
+            if line.startswith('accuracy:'):
                 acc = float(line.split('accuracy:')[1].strip())
-                accs.append(acc)
-    return accs
+                test_accs.append(acc)
+            elif line.startswith('val_accuracy:'):
+                acc = float(line.split('val_accuracy:')[1].strip())
+                val_accs.append(acc)
+            elif line.startswith('test_accuracy:'):  
+                acc = float(line.split('test_accuracy:')[1].strip())
+                test_accs.append(acc)
+
+    return val_accs, test_accs
 
 def main():
     parser = argparse.ArgumentParser()
@@ -24,15 +33,18 @@ def main():
     results = []
     
     for log_file in log_files:
-        accs = parse_log(log_file)
+        val_accs, test_accs = parse_log(log_file)
         results.append({
             'file': str(log_file),
             "dataset": log_file.stem.split('_patch')[0],
             "config": "patch-" + log_file.stem.split('_patch-')[1],
-            "test_acc": float(np.mean(accs)) * 100,
-            "test_acc_std": float(np.std(accs)) * 100,
-            "runs": len(accs),
-            "error": len(accs) == 0
+            "val_acc": float(np.mean(val_accs)) * 100 if len(val_accs) > 0 else 0,
+            "val_acc_std": float(np.std(val_accs)) * 100 if len(val_accs) > 0 else 0,
+            "test_acc": float(np.mean(test_accs)) * 100 if len(test_accs) > 0 else 0,
+            "test_acc_std": float(np.std(test_accs)) * 100 if len(test_accs) > 0 else 0,
+            "runs": len(test_accs),
+            "error": len(test_accs) == 0,
+            "has_val": len(val_accs) > 0
         })
         
 
