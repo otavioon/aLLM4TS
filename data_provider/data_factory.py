@@ -1,3 +1,4 @@
+import numpy as np
 from data_provider.data_loader import (
     Dataset_ETT_hour, 
     Dataset_ETT_minute, 
@@ -18,7 +19,7 @@ from data_provider.data_loader import (
     Pretrain_allm4ts_DAGHAR_dataset
     
 )
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 import torch
 from data_provider.uea import collate_fn
 
@@ -50,9 +51,9 @@ def data_provider(args, flag):
     Data = data_dict[args.data]     # Dataset_Pretrain for 'pretrain
     timeenc = 0 if args.embed != 'timeF' else 1 # timeF for default in pretrain (1)
 
-    if flag == 'test':
+    if flag.lower() == 'test' or flag.lower() == 'val':
         shuffle_flag = False
-        drop_last = True
+        drop_last = False
         batch_size = args.batch_size
         freq = args.freq
     else:
@@ -90,11 +91,14 @@ def data_provider(args, flag):
             drop_last=drop_last)
         return data_set, data_loader
     elif args.task_name == 'classification':
+        
         drop_last = False
         data_set = Data(
             root_path=args.root_path,
             flag=flag,
             perform_instance_norm=args.perform_instance_norm,
+            seed=args.random_seed,
+            percent=args.percent,
         )
 
         data_loader = DataLoader(
@@ -106,7 +110,9 @@ def data_provider(args, flag):
             drop_last=drop_last,
             collate_fn=lambda x: collate_fn(x, max_len=args.seq_len)
         )
-        print("**************************Data loader length: ", len(data_loader))
+        print(f"********* Data loader created. FLAG: {flag} *********")
+        print({"shuffle_flag": shuffle_flag, "drop_last": drop_last, "batch_size": batch_size, "num_workers": args.num_workers, "dataset_len": len(data_set)})
+        print("-----------------------------------------------")
         
         return data_set, data_loader
     else:       # Here we are in the pretrain task

@@ -214,7 +214,7 @@ class Exp_Classification(Exp_Basic):
 
     def train(self, setting):
         train_data, train_loader = self._get_data(flag="TRAIN")
-        vali_data, vali_loader = self._get_data(flag="TEST")
+        vali_data, vali_loader = self._get_data(flag="VAL")
         test_data, test_loader = self._get_data(flag="TEST")
 
         path = os.path.join(self.args.checkpoints, setting)
@@ -234,7 +234,7 @@ class Exp_Classification(Exp_Basic):
             self.model, train_data, path, "train_projections_before_training"
         )
         self.save_projections(
-            self.model, vali_data, path, "valid_projections_before_training"
+            self.model, vali_data, path, "val_projections_before_training"
         )
         self.save_projections(
             self.model, test_data, path, "test_projections_before_training"
@@ -326,7 +326,7 @@ class Exp_Classification(Exp_Basic):
             self.model, train_data, path, "train_projections_after_training"
         )
         self.save_projections(
-            self.model, vali_data, path, "valid_projections_after_training"
+            self.model, vali_data, path, "val_projections_after_training"
         )
         self.save_projections(
             self.model, test_data, path, "test_projections_after_training"
@@ -335,64 +335,64 @@ class Exp_Classification(Exp_Basic):
         return self.model
 
     def test(self, setting, test=0):
-        test_data, test_loader = self._get_data(flag="TEST")
-        if test:
-            print("loading model")
-            self.model.load_state_dict(
-                torch.load(
-                    os.path.join("./checkpoints/" + setting, "checkpoint.pth")
+        for flag in ["val", "test"]:
+            _, test_loader = self._get_data(flag=flag)
+            if test:
+                print("loading model")
+                self.model.load_state_dict(
+                    torch.load(
+                        os.path.join("./checkpoints/" + setting, "checkpoint.pth")
+                    )
                 )
-            )
 
-        preds = []
-        trues = []
-        folder_path = "./test_results/" + setting + "/"
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+            preds = []
+            trues = []
+            folder_path = f"./{flag}_results/" + setting + "/"
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
 
-        self.model.eval()
-        with torch.no_grad():
-            for i, (batch_x, label, padding_mask) in enumerate(test_loader):
-                batch_x = batch_x.float().to(self.device)
-                padding_mask = padding_mask.float().to(self.device)
-                label = label.to(self.device)
+            self.model.eval()
+            with torch.no_grad():
+                for i, (batch_x, label, padding_mask) in enumerate(test_loader):
+                    batch_x = batch_x.float().to(self.device)
+                    padding_mask = padding_mask.float().to(self.device)
+                    label = label.to(self.device)
 
-                outputs = self.model(batch_x, padding_mask, None, None)
+                    outputs = self.model(batch_x, padding_mask, None, None)
 
-                preds.append(outputs.detach())
-                trues.append(label)
+                    preds.append(outputs.detach())
+                    trues.append(label)
 
-        preds = torch.cat(preds, 0)
-        trues = torch.cat(trues, 0)
-        path = os.path.join(self.args.checkpoints, setting)
-        if not os.path.exists(path):
-            os.makedirs(path)
-        save_path = os.path.join(path, "test_logits.npy")
-        np.save(save_path, preds.detach().cpu().numpy())
-        print(f"Test logits saved to {save_path}")
-        
-        print("test shape:", preds.shape, trues.shape)
+            preds = torch.cat(preds, 0)
+            trues = torch.cat(trues, 0)
+            path = os.path.join(self.args.checkpoints, setting)
+            if not os.path.exists(path):
+                os.makedirs(path)
+            save_path = os.path.join(path, f"{flag}_logits.npy")
+            np.save(save_path, preds.detach().cpu().numpy())
+            print(f"{flag} logits saved to {save_path}")
+            
+            print(f"{flag} shape:", preds.shape, trues.shape)
 
-        probs = torch.nn.functional.softmax(
-            preds
-        )  # (total_samples, num_classes) est. prob. for each class and sample
-        predictions = (
-            torch.argmax(probs, dim=1).cpu().numpy()
-        )  # (total_samples,) int class index for each sample
-        trues = trues.flatten().cpu().numpy()
-        accuracy = cal_accuracy(predictions, trues)
+            probs = torch.nn.functional.softmax(
+                preds
+            )  # (total_samples, num_classes) est. prob. for each class and sample
+            predictions = (
+                torch.argmax(probs, dim=1).cpu().numpy()
+            )  # (total_samples,) int class index for each sample
+            trues = trues.flatten().cpu().numpy()
+            accuracy = cal_accuracy(predictions, trues)
 
-        # result save
-        folder_path = "./results/" + setting + "/"
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+            # result save
+            folder_path = "./results/" + setting + "/"
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
 
-        print("accuracy:{}".format(accuracy))
-        file_name = "result_classification.txt"
-        f = open(os.path.join(folder_path, file_name), "a")
-        f.write(setting + "  \n")
-        f.write("accuracy:{}".format(accuracy))
-        f.write("\n")
-        f.write("\n")
-        f.close()
-        return
+            print(f"{flag}_accuracy: {accuracy}")
+            file_name = f"result_classification_{flag}.txt"
+            f = open(os.path.join(folder_path, file_name), "a")
+            f.write(setting + "  \n")
+            f.write(f"{flag}_accuracy: {accuracy}")
+            f.write("\n")
+            f.write("\n")
+            f.close()

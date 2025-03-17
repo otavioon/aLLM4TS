@@ -72,6 +72,7 @@ class Model(nn.Module):
         )
 
         if configs.freeze:
+            print("---> Freezing layers")
             if configs.c_pt:
                 layers_train = configs.pt_layers.split("_")
             elif configs.sft:
@@ -88,6 +89,8 @@ class Model(nn.Module):
                     param.requires_grad = True
                 else:
                     param.requires_grad = False
+        else:
+            print("---> Not freezing layers")
 
     def forward(
         self,
