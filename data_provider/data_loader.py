@@ -1840,8 +1840,10 @@ class UEAloader(Dataset):
             (Moreover, script argument overrides this attribute)
     """
 
-    def __init__(self, root_path, file_list=None, limit_size=None, flag=None, perform_instance_norm: bool = True):
+    def __init__(self, root_path, file_list=None, limit_size=None, flag=None, perform_instance_norm: bool = True, *args, **kwargs):
         self.root_path = root_path
+        if isinstance(flag, str) and flag.lower() == "val":
+            flag =  "TEST"
         self.all_df, self.labels_df = self.load_all(
             root_path, file_list=file_list, flag=flag
         )
@@ -1985,7 +1987,7 @@ class UEAloader(Dataset):
 
 class DAGHAR(Dataset):
     def __init__(
-        self, root_path, flag="train", perform_instance_norm: bool = True
+        self, root_path, flag="train", perform_instance_norm: bool = True, percent: int = 100, seed: int = 42, *args, **kwargs
     ):
         self.flag = flag.lower()
         self.root_path = Path(root_path)
@@ -2002,7 +2004,19 @@ class DAGHAR(Dataset):
         self.feature_df = self.dataset.data.copy().T
         self.class_names = list(range(6))
         self.perform_instance_norm = perform_instance_norm
+        self.percent = percent
+        self.seed = seed
+        self.rng = np.random.RandomState(seed)
+        self.indices = list(range(len(self.dataset)))
+        if percent < 100 and self.flag == "train":
+            self.rng.shuffle(self.indices)
+            self.indices = self.indices[: int(len(self.indices) * self.percent / 100)]
+        
         print(f"DAGHAR from {self.file} with {len(self.dataset)} samples. Instance norm: {self.perform_instance_norm}")
+        print(f"Using flag: {self.flag} with {len(self.indices)} samples (percent: {self.percent}, seed: {self.seed})")
+        print(f"Indices: {self.indices}")
+        
+        
 
     def _read_data(self):
         dataset = MultiModalSeriesCSVDataset(
@@ -2031,6 +2045,7 @@ class DAGHAR(Dataset):
         return case
 
     def __getitem__(self, index):
+        index = self.indices[index]
         x, y = self.dataset[index]
         x = x.T
         y = np.array(y, dtype=np.int8)
@@ -2042,4 +2057,5 @@ class DAGHAR(Dataset):
         return x, y
 
     def __len__(self):
-        return len(self.dataset)
+        # return len(self.dataset)
+        return len(self.indices)
