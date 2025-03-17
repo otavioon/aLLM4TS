@@ -2,7 +2,13 @@
 
 set -x
 
-dataset="KuHar"
+
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <dataset>"
+    exit 1
+fi
+
+dataset=$1
 pretrain_codes=("A" "AE" "AD")
 pretrain_dsets_suffix=("" "-ES" "-DAGHAR")
 

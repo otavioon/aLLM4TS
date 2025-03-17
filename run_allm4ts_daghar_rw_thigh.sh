@@ -42,7 +42,7 @@ for i in 0 1 2; do
                     --load_last \
                     --sft 1 \
                     --sft_layers ln_wpe_attn_mlp \
-                    --checkpoints ./checkpoints/classification/${dataset} \
+                    --checkpoints ./checkpoints/classification/${dataset}_patch-${patch}_stride-${stride}_aLLM4TS-${pt_code}_norm-${instance_norm} \
                     --des exp \
                     --lradj type1 \
                     --use_gpu 1 \
