@@ -63,16 +63,14 @@ class Model(nn.Module):
         self.dropout = nn.Dropout(0.1)
         self.ln_proj = nn.LayerNorm(configs.d_model * self.patch_num)
 
-        self.out_layer = nn.Linear(
-            configs.d_model * self.patch_num, configs.num_class
-        )
+        self.out_layer = nn.Linear(configs.d_model * self.patch_num, configs.num_class)
 
         self.enc_embedding = DataEmbedding(
             configs.enc_in * self.patch_len, configs.d_model, configs.dropout
         )
 
-        if configs.freeze:
-            print("---> Freezing layers")
+        if int(configs.freeze) == 1:
+            print("---> Freezing partial layers")
             if configs.c_pt:
                 layers_train = configs.pt_layers.split("_")
             elif configs.sft:
@@ -89,8 +87,23 @@ class Model(nn.Module):
                     param.requires_grad = True
                 else:
                     param.requires_grad = False
+        elif int(configs.freeze) == 2:
+            print("---> Freezing all layers")
+            for param in self.gpt.parameters():
+                param.requires_grad = False
         else:
             print("---> Not freezing layers")
+
+        num_trainable = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        num_total = sum(p.numel() for p in self.parameters())
+        print("-------------------------------------------------")
+        print("Model initialized successfully!")
+        print((f"Freeze config: {configs.freeze}"))
+        print(
+            f"Trainable parameters: {num_trainable} ({num_trainable / num_total:.2%}%)"
+        )
+        print(f"Total parameters: {num_total}")
+        print("-------------------------------------------------")
 
     def forward(
         self,
@@ -104,9 +117,7 @@ class Model(nn.Module):
 
         input_x = rearrange(x_enc, "b l m -> b m l")
         input_x = self.padding_patch_layer(input_x)
-        input_x = input_x.unfold(
-            dimension=-1, size=self.patch_len, step=self.stride
-        )
+        input_x = input_x.unfold(dimension=-1, size=self.patch_len, step=self.stride)
         input_x = rearrange(input_x, "b m n p -> b n (p m)")
         outputs = self.enc_embedding(input_x, None)
         outputs = self.gpt(inputs_embeds=outputs).last_hidden_state
