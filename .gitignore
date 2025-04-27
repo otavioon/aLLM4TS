@@ -477,3 +477,6 @@ dataset
 results
 lightning_logs/
 logs/
+output_processed/
+output_processed_png/
+teste/
