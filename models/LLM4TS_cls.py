@@ -10,6 +10,7 @@ from transformers.models.llama.modeling_llama import LlamaModel
 from transformers.models.llama.configuration_llama import LlamaConfig
 from einops import rearrange
 from layers.Embed import DataEmbedding
+from minerva.models.nets.mlp import MLP
 
 
 class Model(nn.Module):
@@ -59,15 +60,23 @@ class Model(nn.Module):
             else:
                 raise NotImplementedError
 
-        self.act = F.gelu
+        if configs.head == "allm4ts":
+            self.act = F.gelu
+            self.ln_proj = nn.LayerNorm(configs.d_model * self.patch_num)
+            self.out_layer = nn.Linear(
+                configs.d_model * self.patch_num, configs.num_class
+            )
+        elif configs.head == "hiaac":
+            self.head = MLP([configs.d_model * self.patch_num, 128, configs.num_class])
+        else:
+            raise NotImplementedError(f"head type {configs.head} not supported")
+
         self.dropout = nn.Dropout(0.1)
-        self.ln_proj = nn.LayerNorm(configs.d_model * self.patch_num)
-
-        self.out_layer = nn.Linear(configs.d_model * self.patch_num, configs.num_class)
-
         self.enc_embedding = DataEmbedding(
             configs.enc_in * self.patch_len, configs.d_model, configs.dropout
         )
+        self.in_use_head = configs.head
+        
 
         if int(configs.freeze) == 1:
             print("---> Freezing partial layers")
@@ -121,10 +130,17 @@ class Model(nn.Module):
         input_x = rearrange(input_x, "b m n p -> b n (p m)")
         outputs = self.enc_embedding(input_x, None)
         outputs = self.gpt(inputs_embeds=outputs).last_hidden_state
-        outputs = self.act(outputs).reshape(B, -1)
-        projections = self.ln_proj(outputs)
-        outputs = self.out_layer(projections)
-
+        projections = outputs.reshape(B, -1)
+        
+        if self.in_use_head == "allm4ts":
+            outputs = self.act(outputs).reshape(B, -1)
+            projections = self.ln_proj(outputs)
+            outputs = self.out_layer(projections)
+        elif self.in_use_head == "hiaac":
+            outputs = outputs.reshape(B, -1)
+            outputs = self.head(outputs)
+        else:
+            raise NotImplementedError(f"head type {self.in_use_head} not supported")
         if return_projections:
             return outputs, projections
         else:
