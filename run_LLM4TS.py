@@ -337,11 +337,24 @@ parser.add_argument(
     default=True,
     nargs="?",
 )
+parser.add_argument(
+    "--head",
+    type=str,
+    choices=["allm4ts", "hiaac"],
+    default="allm4ts",
+    help="Head to be used",   
+)
 
 
 if __name__ == "__main__":
 
     args = parser.parse_args()
+    
+    print("-" * 80)
+    print("Args in experiment:")
+    print(args)
+    print("-" * 80)
+    
 
     # random seed
     fix_seed = args.random_seed

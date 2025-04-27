@@ -21,12 +21,18 @@ def convert_csv_to_analysis(df):
             ft_stategy = "Partial Freeze"
         else:
             ft_stategy = "Full Finetune"
+            
+            
+        if "_head-" in row["config"]:
+            head = row["config"].split("_head-")[1].split("_")[0].strip()
+        else:
+            head = "aLLM4TS"
         
         d = {
             "backbone": "aLLM4TS",
             "tsk_pretext": "aLLM4TS",
             "d_pretext": row["config"].split("_aLLM4TS-")[1].split("_")[0].strip(),
-            "head_pred": "MLP",
+            "head_pred": head,
             "ft_stategy": ft_stategy,
             "tsk_target": "HAR",
             "d_target": dataset_map[row["dataset"]],

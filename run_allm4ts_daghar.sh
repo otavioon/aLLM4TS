@@ -2,9 +2,10 @@
 
 set -x
 
+valid_datasets=("KuHar" "MotionSense" "RealWorld_thigh" "RealWorld_waist" "UCI" "WISDM")
 
-if [ $# -lt 1 ]; then
-    echo "Usage: $0 <dataset>"
+if [[ ! " ${valid_datasets[@]} " =~ " $1 " ]]; then
+    echo "Error: Invalid dataset. Valid options are: KuHar, MotionSense, RealWorld_thigh, RealWorld_waist, UCI, WISDM"
     exit 1
 fi
 
@@ -12,16 +13,22 @@ dataset=$1
 pretrain_codes=("A" "AE" "AD")
 pretrain_dsets_suffix=("" "-ES" "-DAGHAR")
 
+# head="allm4ts
+head="hiaac"
+
 mkdir -p logs/classification
 
 # for patch in 8 16 ; do
     # for stride in 16 8 4 2 ; do
+        # for instance_norm in "yes" "no"; do
+
 for i in 0 1 2; do
-    for instance_norm in "yes" "no"; do
+    for instance_norm in "yes"; do
         for patch in 8 ; do
             for stride in  8 ; do
                 for percent in 1 10 50 100 ; do
-                    for freeze in 0 1 ; do
+                    # for freeze in 0 1 2 ; do
+                    for freeze in 0 2 1 ; do
                         pt_code=${pretrain_codes[i]}
                         pt_dset_suffix=${pretrain_dsets_suffix[i]}
                         python run_LLM4TS.py \
@@ -52,7 +59,7 @@ for i in 0 1 2; do
                             --load_last \
                             --sft 1 \
                             --sft_layers ln_wpe_attn_mlp \
-                            --checkpoints ./checkpoints/classification/${dataset}_patch-${patch}_stride-${stride}_aLLM4TS-${pt_code}_norm-${instance_norm} \
+                            --checkpoints ./checkpoints/classification/${dataset}_patch-${patch}_stride-${stride}_aLLM4TS-${pt_code}_norm-${instance_norm}_percent-${percent}_freeze-${freeze}_head-${head} \
                             --des exp \
                             --lradj type1 \
                             --use_gpu 1 \
@@ -60,7 +67,8 @@ for i in 0 1 2; do
                             --gpu 0 \
                             --perform_instance_norm ${perform_instance_norm} \
                             --percent ${percent} \
-                            --num_workers 0 2>&1 | tee logs/classification/${dataset}_patch-${patch}_stride-${stride}_aLLM4TS-${pt_code}_norm-${instance_norm}_percent-${percent}_freeze-${freeze}.log
+                            --head ${head} \
+                            --num_workers 0 2>&1 | tee logs/classification/${dataset}_patch-${patch}_stride-${stride}_aLLM4TS-${pt_code}_norm-${instance_norm}_percent-${percent}_freeze-${freeze}_head-${head}.log
                     done
                 done
             done
