@@ -14,13 +14,18 @@ def convert_csv_to_analysis(df):
     }
     
     for (row_idx, row) in df.iterrows():
-        ft_stategy = row["config"].split("_freeze-")[1].split("_")[0].strip()
-        if ft_stategy == "2":
-            ft_stategy = "Freeze"
-        elif ft_stategy == "1":
-            ft_stategy = "Partial Freeze"
+        # Skip non-normalized rows
+        norm = row["config"].split("_norm-")[1].split("_")[0].strip()
+        if norm == "no":
+            continue    
+        
+        ft_strategy = row["config"].split("_freeze-")[1].split("_")[0].strip()
+        if ft_strategy == "2":
+            ft_strategy = "Freeze"
+        elif ft_strategy == "1":
+            ft_strategy = "Partial Freeze"
         else:
-            ft_stategy = "Full Finetune"
+            ft_strategy = "Full Finetune"
             
             
         if "_head-" in row["config"]:
@@ -33,7 +38,7 @@ def convert_csv_to_analysis(df):
             "tsk_pretext": "aLLM4TS",
             "d_pretext": row["config"].split("_aLLM4TS-")[1].split("_")[0].strip(),
             "head_pred": head,
-            "ft_stategy": ft_stategy,
+            "ft_strategy": ft_strategy,
             "tsk_target": "HAR",
             "d_target": dataset_map[row["dataset"]],
             "frac_dtarget": float(row["config"].split("_percent-")[1].split("_")[0].strip()) / 100,
