@@ -2,6 +2,7 @@
 
 set -x
 
+cd ../../..
 
 for lr in 0.002 0.0005 0.0001 ; do
     for patch in 16 8 ; do
@@ -9,8 +10,8 @@ for lr in 0.002 0.0005 0.0001 ; do
             python run_LLM4TS.py \
                 --task_name classification \
                 --is_training 1 \
-                --root_path ./dataset/SelfRegulationSCP1/ \
-                --model_id LLM4TS_cls_SelfRegulationSCP1 \
+                --root_path ./dataset/UWaveGestureLibrary/ \
+                --model_id LLM4TS_cls_UWaveGestureLibrary \
                 --model LLM4TS_cls \
                 --data UEA \
                 --is_llm 1 \
@@ -33,13 +34,13 @@ for lr in 0.002 0.0005 0.0001 ; do
                 --pt_sft_model pretrain_LLM4TS_pt_sl1024_pl1024_llml6_lr0.0001_bs256_percent100_ln_wpe_attn_mlp_gpt2_w_weight_s16_0 \
                 --sft 1 \
                 --sft_layers ln_wpe \
-                --checkpoints ./checkpoints/classification/SelfRegulationSCP1 \
+                --checkpoints ./checkpoints/classification/UWaveGestureLibrary \
                 --des exp \
                 --lradj type1 \
                 --use_gpu 1 \
                 --devices 0 \
                 --gpu 0 \
-                --num_workers 0 2>&1 | tee logs/classification/SelfRegulationSCP1_patch-${patch}_stride-${stride}_lr-${lr}.log
+                --num_workers 0 2>&1 | tee logs/classification/UWaveGestureLibrary_patch-${patch}_stride-${stride}_lr-${lr}.log
         done
     done
 done

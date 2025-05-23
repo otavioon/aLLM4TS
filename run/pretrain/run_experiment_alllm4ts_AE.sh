@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd ../..
+
 export CUDA_VISIBLE_DEVICES=1
 
 CKPT_DIR=./checkpoints/experiments/aLLM4TS-AE/ETTh1_ETTm1_ETTh2_ETTm2_weather_traffic_electricity_illness-ES

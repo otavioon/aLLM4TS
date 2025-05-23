@@ -1,8 +1,10 @@
 #!/bin/bash
 
+cd ../..
+
 export CUDA_VISIBLE_DEVICES=0
 
-CKPT_DIR=./checkpoints/experiments/aLLM4TS-AD/ETTh1_ETTm1_ETTh2_ETTm2_weather_traffic_electricity_illness-DAGHAR
+CKPT_DIR=./checkpoints/experiments/aLLM4TS-A/ETTh1_ETTm1_ETTh2_ETTm2_weather_traffic_electricity_illness
 mkdir -p ${CKPT_DIR}
 
 python run_LLM4TS.py \
@@ -11,7 +13,7 @@ python run_LLM4TS.py \
 --data_path null \
 --model_id pretrain_LLM4TS_pt \
 --model LLM4TS_pt \
---data pretrain_allm4ts_daghar \
+--data pretrain \
 --percent 100 \
 --features M \
 --seq_len 1024 \
@@ -47,8 +49,8 @@ python run_LLM4TS.py \
 --devices 0 \
 --gpu 0 \
 --num_workers 0 \
---resume_from checkpoint_epoch_21.ckpt \
---resume_from_epoch 21 2>&1 | tee ${CKPT_DIR}/log.txt
+--resume_from checkpoint_epoch_30.ckpt \
+--resume_from_epoch 30 2>&1 | tee ${CKPT_DIR}/log.txt
 
 
 # Num Workers = 0 --> https://discuss.pytorch.org/t/guidelines-for-assigning-num-workers-to-dataloader/813/17

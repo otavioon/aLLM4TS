@@ -2,6 +2,12 @@
 
 set -x
 
+cd ../../..
+
+echo ">>> $(pwd)"
+python run_LLM4TS.py
+
+
 for patch in 8 16 ; do
     for stride in 16 8 4 2 ; do
         python run_LLM4TS.py \

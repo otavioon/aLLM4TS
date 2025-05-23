@@ -1,6 +1,8 @@
 #!/bin/bash
 
+
 set -x
+cd ../../..
 
 valid_datasets=("KuHar" "MotionSense" "RealWorld_thigh" "RealWorld_waist" "UCI" "WISDM")
 

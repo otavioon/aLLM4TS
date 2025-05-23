@@ -1,8 +1,10 @@
 #!/bin/bash
 
-export CUDA_VISIBLE_DEVICES=1
+cd ../..
 
-CKPT_DIR="./checkpoints/experiments/TFC-AE/ETTh1_ETTm1_ETTh2_ETTm2_weather_traffic_electricity_illness-ES/"
+export CUDA_VISIBLE_DEVICES=0
+
+CKPT_DIR="./checkpoints/experiments/TFC-AD/ETTh1_ETTm1_ETTh2_ETTm2_weather_traffic_electricity_illness-DAGHAR/"
 MODEL_NAME="tfc-transformer-encoder"
 CKPT_VERSION="final"
 FINAL_DIR=${CKPT_DIR}/${MODEL_NAME}/${CKPT_VERSION}
@@ -18,7 +20,8 @@ python run_tfc_pretrain.py   \
     --TS_length 1024 \
     --batch_size 128 \
     --num_workers 0 \
-    --data pretrain_allm4ts_es \
+    --data pretrain_allm4ts_daghar \
     --train_epochs 100 \
     --accelerator gpu \
-    --devices 1 2>&1 | tee ${CKPT_DIR}/log.txt
+    --devices 1 \
+    --resume_from last.ckpt 2>&1 | tee ${CKPT_DIR}/log.txt
