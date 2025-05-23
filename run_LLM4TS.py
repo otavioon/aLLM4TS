@@ -7,6 +7,7 @@ from exp.exp_imputation import Exp_Imputation
 from exp.exp_ad import Exp_Anomaly_Detection
 from exp.exp_sf import Exp_Short_Term_Forecast
 from exp.exp_classification import Exp_Classification
+from exp.exp_classification_knn import Exp_Classification_KNN
 import random
 import numpy as np
 
@@ -345,6 +346,12 @@ parser.add_argument(
     help="Head to be used",   
 )
 
+parser.add_argument(
+    "--n_neighbors",
+    type=int,
+    default=5,
+    help="number of neighbors for knn classification",
+)
 
 if __name__ == "__main__":
 
@@ -355,7 +362,6 @@ if __name__ == "__main__":
     print(args)
     print("-" * 80)
     
-
     # random seed
     fix_seed = args.random_seed
     random.seed(fix_seed)
@@ -379,6 +385,8 @@ if __name__ == "__main__":
         Exp = Exp_Anomaly_Detection
     elif args.task_name == "classification":
         Exp = Exp_Classification
+    elif args.task_name == "pretrain_analysis_knn":
+        Exp = Exp_Classification_KNN
     else:
         Exp = Exp_Main
 
