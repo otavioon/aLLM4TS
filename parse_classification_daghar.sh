@@ -2,7 +2,7 @@
 
 # Get arguments
 log_dir="${1:-logs/classification}"
-output_csv="${2:-allm4ts_results.csv}"
+output_csv="${2:-allm4ts_results_daghar.csv}"
 tmp_dir=$(mktemp -d)
 tmp_file="$tmp_dir/$output_csv"
 
