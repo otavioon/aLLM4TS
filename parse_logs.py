@@ -9,6 +9,7 @@ def parse_log(log_file):
     
     with open(log_file, 'r') as f:
         for line in f:
+            line = line.lower()
             if line.startswith('accuracy:'):
                 acc = float(line.split('accuracy:')[1].strip())
                 test_accs.append(acc)
