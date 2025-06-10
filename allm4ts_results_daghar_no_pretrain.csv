@@ -1,0 +1,70 @@
+backbone,tsk_pretext,d_pretext,head_pred,ft_strategy,tsk_target,d_target,frac_dtarget,metric_target,metric
+GPT,GPT,A,hiaac,Full Finetune,HAR,KH,1.0,accuracy,0.16666666666666663
+GPT,GPT,A,hiaac,Freeze,HAR,KH,1.0,accuracy,0.18518518518518515
+GPT,GPT,A,allm4ts,Full Finetune,HAR,KH,0.1,accuracy,0.39583333333333326
+GPT,GPT,A,hiaac,Full Finetune,HAR,KH,0.1,accuracy,0.17824074074074073
+GPT,GPT,A,allm4ts,Freeze,HAR,KH,0.1,accuracy,0.2962962962962962
+GPT,GPT,A,hiaac,Freeze,HAR,KH,0.1,accuracy,0.2129629629629629
+GPT,GPT,A,allm4ts,Full Finetune,HAR,KH,0.01,accuracy,0.25925925925925924
+GPT,GPT,A,hiaac,Full Finetune,HAR,KH,0.01,accuracy,0.1898148148148148
+GPT,GPT,A,allm4ts,Freeze,HAR,KH,0.01,accuracy,0.20601851851851852
+GPT,GPT,A,hiaac,Freeze,HAR,KH,0.01,accuracy,0.2060185185185185
+GPT,GPT,A,allm4ts,Full Finetune,HAR,KH,0.5,accuracy,0.0
+GPT,GPT,A,hiaac,Full Finetune,HAR,KH,0.5,accuracy,0.23379629629629622
+GPT,GPT,A,hiaac,Freeze,HAR,KH,0.5,accuracy,0.18287037037037035
+GPT,GPT,A,hiaac,Full Finetune,HAR,MS,1.0,accuracy,0.16666666666666663
+GPT,GPT,A,hiaac,Freeze,HAR,MS,1.0,accuracy,0.2821720025109856
+GPT,GPT,A,allm4ts,Full Finetune,HAR,MS,0.1,accuracy,0.0
+GPT,GPT,A,hiaac,Full Finetune,HAR,MS,0.1,accuracy,0.1955430006277464
+GPT,GPT,A,allm4ts,Freeze,HAR,MS,0.1,accuracy,0.0
+GPT,GPT,A,hiaac,Freeze,HAR,MS,0.1,accuracy,0.17357187696170748
+GPT,GPT,A,allm4ts,Full Finetune,HAR,MS,0.01,accuracy,0.2539234149403641
+GPT,GPT,A,hiaac,Full Finetune,HAR,MS,0.01,accuracy,0.2055869428750784
+GPT,GPT,A,allm4ts,Freeze,HAR,MS,0.01,accuracy,0.20998116760828622
+GPT,GPT,A,hiaac,Freeze,HAR,MS,0.01,accuracy,0.18236032642812305
+GPT,GPT,A,hiaac,Full Finetune,HAR,MS,0.5,accuracy,0.16666666666666663
+GPT,GPT,A,hiaac,Freeze,HAR,MS,0.5,accuracy,0.18204645323289392
+GPT,GPT,A,hiaac,Full Finetune,HAR,RW-Thigh,1.0,accuracy,0.16666666666666663
+GPT,GPT,A,hiaac,Freeze,HAR,RW-Thigh,1.0,accuracy,0.0
+GPT,GPT,A,hiaac,Full Finetune,HAR,RW-Thigh,0.1,accuracy,0.16666666666666663
+GPT,GPT,A,hiaac,Freeze,HAR,RW-Thigh,0.1,accuracy,0.16666666666666663
+GPT,GPT,A,allm4ts,Full Finetune,HAR,RW-Thigh,0.01,accuracy,0.224522659305268
+GPT,GPT,A,hiaac,Full Finetune,HAR,RW-Thigh,0.01,accuracy,0.17034736599953992
+GPT,GPT,A,allm4ts,Freeze,HAR,RW-Thigh,0.01,accuracy,0.2092822636300897
+GPT,GPT,A,hiaac,Freeze,HAR,RW-Thigh,0.01,accuracy,0.1851851851851852
+GPT,GPT,A,hiaac,Full Finetune,HAR,RW-Thigh,0.5,accuracy,0.16666666666666663
+GPT,GPT,A,hiaac,Freeze,HAR,RW-Thigh,0.5,accuracy,0.24913733609385783
+GPT,GPT,A,hiaac,Full Finetune,HAR,RW-Waist,1.0,accuracy,0.34516460905349794
+GPT,GPT,A,hiaac,Freeze,HAR,RW-Waist,1.0,accuracy,0.20833333333333337
+GPT,GPT,A,hiaac,Full Finetune,HAR,RW-Waist,0.1,accuracy,0.2917952674897119
+GPT,GPT,A,hiaac,Freeze,HAR,RW-Waist,0.1,accuracy,0.20241769547325103
+GPT,GPT,A,allm4ts,Full Finetune,HAR,RW-Waist,0.01,accuracy,0.38310185185185186
+GPT,GPT,A,hiaac,Full Finetune,HAR,RW-Waist,0.01,accuracy,0.2442129629629629
+GPT,GPT,A,allm4ts,Freeze,HAR,RW-Waist,0.01,accuracy,0.30671296296296297
+GPT,GPT,A,hiaac,Freeze,HAR,RW-Waist,0.01,accuracy,0.18299897119341568
+GPT,GPT,A,hiaac,Full Finetune,HAR,RW-Waist,0.5,accuracy,0.16666666666666663
+GPT,GPT,A,hiaac,Freeze,HAR,RW-Waist,0.5,accuracy,0.20974794238683125
+GPT,GPT,A,hiaac,Full Finetune,HAR,UCI,1.0,accuracy,0.3893719806763285
+GPT,GPT,A,hiaac,Freeze,HAR,UCI,1.0,accuracy,0.5144927536231885
+GPT,GPT,A,allm4ts,Full Finetune,HAR,UCI,0.1,accuracy,0.0
+GPT,GPT,A,hiaac,Full Finetune,HAR,UCI,0.1,accuracy,0.4077294685990338
+GPT,GPT,A,allm4ts,Freeze,HAR,UCI,0.1,accuracy,0.0
+GPT,GPT,A,hiaac,Freeze,HAR,UCI,0.1,accuracy,0.2971014492753623
+GPT,GPT,A,allm4ts,Full Finetune,HAR,UCI,0.01,accuracy,0.2963768115942029
+GPT,GPT,A,hiaac,Full Finetune,HAR,UCI,0.01,accuracy,0.23333333333333328
+GPT,GPT,A,allm4ts,Freeze,HAR,UCI,0.01,accuracy,0.0
+GPT,GPT,A,hiaac,Freeze,HAR,UCI,0.01,accuracy,0.24734299516908215
+GPT,GPT,A,allm4ts,Full Finetune,HAR,UCI,0.5,accuracy,0.0
+GPT,GPT,A,hiaac,Full Finetune,HAR,UCI,0.5,accuracy,0.5874396135265701
+GPT,GPT,A,hiaac,Freeze,HAR,UCI,0.5,accuracy,0.2719806763285024
+GPT,GPT,A,hiaac,Full Finetune,HAR,WISDM,1.0,accuracy,0.45020481310803895
+GPT,GPT,A,hiaac,Freeze,HAR,WISDM,1.0,accuracy,0.6625704045058884
+GPT,GPT,A,allm4ts,Full Finetune,HAR,WISDM,0.1,accuracy,0.6827956989247312
+GPT,GPT,A,hiaac,Full Finetune,HAR,WISDM,0.1,accuracy,0.51510496671787
+GPT,GPT,A,hiaac,Freeze,HAR,WISDM,0.1,accuracy,0.44649257552483346
+GPT,GPT,A,allm4ts,Full Finetune,HAR,WISDM,0.01,accuracy,0.33154121863799285
+GPT,GPT,A,hiaac,Full Finetune,HAR,WISDM,0.01,accuracy,0.27905785970302094
+GPT,GPT,A,allm4ts,Freeze,HAR,WISDM,0.01,accuracy,0.28366615463389655
+GPT,GPT,A,hiaac,Freeze,HAR,WISDM,0.01,accuracy,0.2697132616487455
+GPT,GPT,A,hiaac,Full Finetune,HAR,WISDM,0.5,accuracy,0.6169994879672299
+GPT,GPT,A,hiaac,Freeze,HAR,WISDM,0.5,accuracy,0.4679979518689196

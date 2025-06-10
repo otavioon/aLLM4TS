@@ -1,0 +1,12 @@
+file,dataset,config,val_acc,val_acc_std,test_acc,test_acc_std,runs,error,has_val
+logs/classification_no_pretrain/EthanolConcentration_patch-16_stride-16.log,EthanolConcentration,patch-16_stride-16,29.02408111533587,1.4339301012654975,29.02408111533587,1.4339301012654975,3,False,True
+logs/classification_no_pretrain/FaceDetection_patch-16_stride-16_lr-0.0005.log,FaceDetection,patch-16_stride-16_lr-0.0005,67.18690881573968,0.47502381874724214,67.18690881573968,0.47502381874724214,3,False,True
+logs/classification_no_pretrain/FaceDetection_patch-16_stride-16_lr-0.002.log,FaceDetection,patch-16_stride-16_lr-0.002,0.0,0.0,0.0,0.0,0,True,False
+logs/classification_no_pretrain/Handwriting_patch-8_stride-4_lr-0.0005.log,Handwriting,patch-8_stride-4_lr-0.0005,26.90196078431373,0.8925338569992978,26.90196078431373,0.8925338569992978,3,False,True
+logs/classification_no_pretrain/Heartbeat_patch-16_stride-4_lr-0.0001.log,Heartbeat,patch-16_stride-4_lr-0.0001,76.09756097560977,0.39829101508669595,76.09756097560977,0.39829101508669595,3,False,True
+logs/classification_no_pretrain/JapaneseVowels_patch-8_stride-4_lr-0.002.log,JapaneseVowels,patch-8_stride-4_lr-0.002,95.76576576576578,0.8918463906857318,95.76576576576578,0.8918463906857318,3,False,True
+logs/classification_no_pretrain/PEMS-SF_patch-8_stride-16_lr-0.0005.log,PEMS-SF,patch-8_stride-16_lr-0.0005,57.41811175337187,0.7209359126732041,57.41811175337187,0.7209359126732041,3,False,True
+logs/classification_no_pretrain/SelfRegulationSCP1_patch-8_stride-8_lr-0.002.log,SelfRegulationSCP1,patch-8_stride-8_lr-0.002,88.62343572241184,1.7026882306138555,88.62343572241184,1.7026882306138555,3,False,True
+logs/classification_no_pretrain/SelfRegulationSCP2_patch-8_stride-4_lr-0.0001.log,SelfRegulationSCP2,patch-8_stride-4_lr-0.0001,50.92592592592592,0.5237828008789274,50.92592592592592,0.5237828008789274,3,False,True
+logs/classification_no_pretrain/SpokenArabicDigits_patch-16_stride-2_lr-0.002.log,SpokenArabicDigits,patch-16_stride-2_lr-0.002,98.33257541306656,0.46127403531007705,98.33257541306656,0.46127403531007705,3,False,True
+logs/classification_no_pretrain/UWaveGestureLibrary_patch-16_stride-16_lr-0.002.log,UWaveGestureLibrary,patch-16_stride-16_lr-0.002,75.20833333333333,3.1902901731486577,75.20833333333333,3.1902901731486577,3,False,True
